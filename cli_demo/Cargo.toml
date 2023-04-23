@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 hanzi_lookup = { path = "../hanzi_lookup" }
+libc = "0.2.142"
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0.90"
 serde_json = "1.0"
