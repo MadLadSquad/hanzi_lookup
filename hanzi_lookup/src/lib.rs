@@ -24,7 +24,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::fmt::Write;
 use std::ffi::CStr;
-
+use std::ptr;
 
 #[derive(Serialize, Deserialize)]
 struct Action {
@@ -140,29 +140,39 @@ fn incremental_replay(chars: &Vec<Vec<Stroke>>) -> Vec<Vec<Stroke>> {
     res
 }
 
-pub fn c_lib_main(results: libc::size_t, input: &str) {
-    
-    let res: Vec<Vec<Stroke>> = vec![parse_sample(&input)];
+#[no_mangle]
+pub extern "C" fn c_lib_main(results: libc::size_t, input: *const libc::c_char) -> *const libc::c_char {
+    let input_str: &std::ffi::CStr = unsafe { std::ffi::CStr::from_ptr(input) };
+    let inputs: Vec<Vec<Stroke>> = vec![parse_sample(&input_str.to_str().unwrap())];
 
+    //let inputs = incremental_replay(&res);
 
-    let inputs = incremental_replay(&res);
     let matches = match_typed(&inputs.last().unwrap(), results);
     let mut chars = String::new();
 
-    let mut arr = Vec<*libc::c_char> = new Vec();
-
     for i in 0..matches.len() {
-        println!("{}", matches[i].hanzi)
-        //write!(&mut chars, "{}", matches[i].hanzi).unwrap();
+        write!(chars, "{}", matches[i].hanzi).unwrap();
     }
-    println!("Chars: {}", chars);
+
+    let c_str = std::ffi::CString::new(chars).expect("Fail");
+    c_str.into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn c_lib_main_cleanup(ptr: *const libc::c_char) {
+    unsafe { let _ = std::ffi::CString::from_raw(ptr as *mut _); };
 }
 
 pub fn c_lib_main_n(results: libc::size_t) {
-    let str = std::ffi::CString::new("../../cli_demo/debug/inputs.txt").expect("string");
+    let str = std::ffi::CString::new("debug/inputs.txt").expect("string");
     let file = File::open(str.to_str().unwrap()).expect("Failed to open file");
+
     for line in BufReader::new(file).lines() {
         let line = line.expect("Line");
-        c_lib_main(results, &line);
+
+        let l1 = std::ffi::CString::new(line).unwrap() ;
+
+        let r: *const libc::c_char = c_lib_main(results, l1.as_ptr());
+        c_lib_main_cleanup(r);
     }
 }

@@ -69,8 +69,8 @@ fn incremental_replay(chars: &Vec<Vec<Stroke>>) -> Vec<Vec<Stroke>> {
 }
 
 fn main() {
-    hanzi_lookup::c_lib_main();
-    /*
+    //hanzi_lookup::c_lib_main_n(20);
+    
     println!("Loading evaluation data.");
     let inputs = read_inputs("debug/inputs.txt");
     println!("Loaded {} inputs.", inputs.len());
@@ -88,5 +88,5 @@ fn main() {
             }
             println!("{:?}    {} strokes   Chars: {}", duration, input.len(), chars);
         }
-    }*/
+    }
 }
