@@ -5,3 +5,4 @@ dist/
 **/debug/stdout.txt
 Cargo.lock
 **/*.rs.bk
+vendor/
